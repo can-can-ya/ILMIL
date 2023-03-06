@@ -7,7 +7,7 @@ from pprint import pprint
 
 class Config:
     # data
-    voc_data_dir = '/home/caf/data/VOCdevkit2007/VOC2007'
+    voc_data_dir = '/home/goujiaxiang/Code/ILMIL/ILMIL/VOCdevkit/VOC2007'
     min_size = 600  # image resize
     max_size = 1000 # image resize
     num_workers = 8
@@ -45,9 +45,9 @@ class Config:
 
     test_num = 10000
     # model
-    load_path = "pretrained_model/fasterrcnn_12231554_25_0.721721928383733"
+    load_path = "../fasterrcnn.pth"
 
-    caffe_pretrain = True  # use caffe pretrained model instead of torchvision
+    caffe_pretrain = False  # use caffe pretrained model instead of torchvision # 设置为True的话：TypeError: Implicit conversion to a NumPy array is not allowed. Please use `.get()` to construct a NumPy array explicitly.
     caffe_pretrain_path = 'pretrained_model/fasterrcnn_12231554_25_0.721721928383733'
 
     def _parse(self, kwargs):

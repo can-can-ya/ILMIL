@@ -1,0 +1,14 @@
+visdom
+torchvision
+scikit-image
+tqdm
+fire
+# pprint 自带了
+matplotlib
+ipdb
+cython
+# git+https://github.com/pytorch/tnt.git@master
+torchtnt
+torchnet
+cupy-cuda11x
+pillow==6.2.2 #ImportError: cannot import name 'PILLOW_VERSION' from 'PIL' (/home/goujiaxiang/anaconda3/envs/ILMIL/lib/python3.7/site-packages/PIL/__init__.py)

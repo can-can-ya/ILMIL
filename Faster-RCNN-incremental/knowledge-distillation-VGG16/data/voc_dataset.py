@@ -167,7 +167,7 @@ class VOCBboxDataset_test:
         self.data_dir = data_dir
         self.use_difficult = use_difficult
         self.return_difficult = return_difficult
-        self.label_names = VOC_BBOX_LABEL_NAMES_test
+        self.label_names = opt.VOC_BBOX_LABEL_NAMES_test
         print("=======================VOCBboxDataset_test==========================")
         print(self.label_names)
 

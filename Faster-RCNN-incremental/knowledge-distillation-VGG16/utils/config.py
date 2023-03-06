@@ -10,7 +10,7 @@ from pprint import pprint
 class Config:
     # data
     # voc_data_dir = '../../BCCD_Dataset/BCCD'
-    voc_data_dir = '/home/caf/data/VOCdevkit2007/VOC2007'
+    voc_data_dir = '/home/goujiaxiang/Code/ILMIL/ILMIL/VOCdevkit/VOC2007'
     min_size = 600  # image resize
     max_size = 1000  # image resize
     num_workers = 8
@@ -51,10 +51,10 @@ class Config:
     use_hint = False
     testtxt = 'test'
     datatxt = 'trainval'
-    load_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984'
+    load_path = "../fasterrcnn.pth"
     # load_path = None
 
-    caffe_pretrain = True  # use caffe pretrained model instead of torchvision
+    caffe_pretrain = False  # use caffe pretrained model instead of torchvision
     caffe_pretrain_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984'
 
     VOC_BBOX_LABEL_NAMES_all = (

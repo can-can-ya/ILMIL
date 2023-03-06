@@ -277,12 +277,13 @@ class FasterRCNNTrainer(nn.Module):
             # stage1_hint_loss = l2_loss(middle_feature1, teacher_pred_stage_features1_)
             # stage2_hint_loss = l2_loss(middle_feature2, teacher_pred_stage_features2_)
             # stage3_hint_loss = l2_loss(middle_feature3, teacher_pred_stage_features3_)
-            stage4_hint_loss = l2_loss(middle_feature4, teacher_pred_stage_features4_)
             # 中间特征层的蒸馏损失
             hint_loss = l2_loss(features, teacher_pred_features_)
             # hint_loss = (hint_loss + stage1_hint_loss + stage2_hint_loss + stage3_hint_loss + stage4_hint_loss) / 5.0
-            hint_loss = (hint_loss + stage4_hint_loss) / 2.0
-            hint_loss = hint_loss * 10
+            if opt.use_hint4:
+                stage4_hint_loss = l2_loss(middle_feature4, teacher_pred_stage_features4_)
+                hint_loss = (hint_loss + stage4_hint_loss) / 2.0
+                hint_loss = hint_loss * 10
             losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss,
                       roi_cls_loss,
                       hint_loss,

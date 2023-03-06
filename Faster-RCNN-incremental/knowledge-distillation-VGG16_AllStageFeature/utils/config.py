@@ -9,7 +9,7 @@ from pprint import pprint
 
 class Config:
     # data
-    voc_data_dir = '/home/caf/data/VOCdevkit2007/VOC2007'
+    voc_data_dir = '/home/goujiaxiang/Code/ILMIL/ILMIL/VOCdevkit/VOC2007'
 
     min_size = 600  # image resize
     max_size = 1000  # image resize
@@ -49,15 +49,16 @@ class Config:
     is_distillation = True
     only_use_cls_distillation = False
     use_hint = True
+    use_hint4 = True # 用不用feature4来计算损失，依赖于use_hint
     testtxt = 'test'
     datatxt = 'trainval'
-    load_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984_te_su.pth'
+    load_path = ""
     #load_path = 'checkpoints/fasterrcnn_12222105_0.712649824453_caffe_pretrain.pth'
     #load_path = 'pretrained_model/faster_rcnn_1_7_10021_remove.pth'
 
     #load_path = None
 
-    caffe_pretrain = True  # use caffe pretrained model instead of torchvision
+    caffe_pretrain = False  # use caffe pretrained model instead of torchvision
     #caffe_pretrain_path = 'pretrained_model/vgg16_caffe.pth'
     caffe_pretrain_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984_te_su.pth'
 

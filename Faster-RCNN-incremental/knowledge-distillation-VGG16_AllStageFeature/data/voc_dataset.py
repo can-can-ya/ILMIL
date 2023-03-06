@@ -134,7 +134,8 @@ class VOCBboxDataset:
                 int(bndbox_anno.find(tag).text) - 1
                 for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
 
-            label.append(opt.index)
+            # label.append(opt.index)
+            label.append(opt.VOC_BBOX_LABEL_NAMES_test.index(name))
         # np.stack在axis=i上增加一维。这边似乎只是转为np型数组
         # 由于这边要做类别增量，可能出现图像没有bbox，所有加一个判断
         # 使得没有bbox的图像不会报错 而是在后面的操作中会跳过

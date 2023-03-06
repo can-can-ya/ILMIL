@@ -93,7 +93,7 @@ def test(**kwargs):
     trainer.eval()
     eval_result = eval(test_dataloader_all, faster_rcnn, test_num=opt.test_num)
     lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
-    log_info = 'lr:{}, map:{},loss:{}'.format(str(lr_),
+    log_info = 'lr:{},ap:{}, map:{},loss:{}'.format(str(lr_),
                                                 str(eval_result['ap']),
                                                   str(eval_result['map']),
                                                   str(trainer.get_meter_data()))

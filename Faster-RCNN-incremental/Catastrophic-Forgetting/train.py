@@ -101,7 +101,7 @@ def train(**kwargs):
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map, epoch=epoch)
 
-        trainer.save(best_map=eval_result['map'], epoch=epoch)
+        # trainer.save(best_map=eval_result['map'], epoch=epoch)
 if __name__ == '__main__':
     import fire
 

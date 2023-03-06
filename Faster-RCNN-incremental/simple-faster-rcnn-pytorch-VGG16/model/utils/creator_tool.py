@@ -432,6 +432,6 @@ class ProposalCreator:
             thresh=self.nms_thresh)
         if n_post_nms > 0:
             keep = keep[:n_post_nms]
-        #roi = roi[keep.cpu().numpy()]
+        # roi = roi[keep.cpu().numpy()]
         roi = roi[keep]
         return roi

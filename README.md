@@ -18,3 +18,11 @@ This is the source code for our paper: **基于知识蒸馏的目标检测模型
     year={2022},
     publisher={工程科学与技术}
     }
+
+# 安装pytorch(python版本为3.7）
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
+
+# visdom使用
+1. 在服务器终端输入python -m visdom.server启动
+2. 本机终端实现端口映射：ssh goujiaxiang@205machine2.top -p 2333 -L 8887:127.0.0.1:8097
+3. 本机浏览器访问：http://localhost:8887/

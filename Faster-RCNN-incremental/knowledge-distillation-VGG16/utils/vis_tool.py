@@ -11,7 +11,7 @@ from matplotlib import pyplot as plot
 # from data.voc_dataset import VOC_BBOX_LABEL_NAMES
 
 #
-VOC_BBOX_LABEL_NAMES = opt.VOC_BBOX_LABEL_NAMES
+# VOC_BBOX_LABEL_NAMES = opt.VOC_BBOX_LABEL_NAMES
 
 
 def vis_image(img, ax=None):

@@ -11,7 +11,7 @@ from model.utils.roi_cupy import kernel_backward, kernel_forward
 Stream = namedtuple('Stream', ['ptr'])
 
 
-@cupy.util.memoize(for_each_device=True)
+@cupy.memoize(for_each_device=True)
 def load_kernel(kernel_name, code, **kwargs):
     cp.cuda.runtime.free(0)
     code = Template(code).substitute(**kwargs)
@@ -75,14 +75,23 @@ class RoI(Function):
         return grad_input, None
 
 
-class RoIPooling2D(t.nn.Module):
+# class RoIPooling2D(t.nn.Module):
+#
+#     def __init__(self, outh, outw, spatial_scale):
+#         super(RoIPooling2D, self).__init__()
+#         self.RoI = RoI(outh, outw, spatial_scale)
+#
+#     def forward(self, x, rois):
+#         return self.RoI(x, rois)
 
+from torchvision.ops import roi_pool
+class RoIPooling2D(t.nn.Module):
     def __init__(self, outh, outw, spatial_scale):
         super(RoIPooling2D, self).__init__()
-        self.RoI = RoI(outh, outw, spatial_scale)
+        self.outh, self.outw, self.spatial_scale = outh, outw, spatial_scale
 
     def forward(self, x, rois):
-        return self.RoI(x, rois)
+        return roi_pool(x, rois, (self.outh, self.outw), self.spatial_scale)
 
 
 def test_roi_module():

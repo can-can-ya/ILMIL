@@ -9,7 +9,7 @@ import ipdb
 import matplotlib
 from tqdm import tqdm
 import torch as t
-import cv2
+# import cv2
 import resource
 
 from utils.config import opt
@@ -33,7 +33,7 @@ rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (20480, rlimit[1]))
 
 matplotlib.use('agg')
-VOC_BBOX_LABEL_NAMES = opt.VOC_BBOX_LABEL_NAMES
+# VOC_BBOX_LABEL_NAMES = opt.VOC_BBOX_LABEL_NAMES
 
 def train(**kwargs):
     opt._parse(kwargs)
@@ -71,30 +71,30 @@ def train(**kwargs):
 
     # 提取蒸馏知识所需要的软标签
     # '''
-    if opt.is_distillation == True:
-        opt.predict_socre = 0.3
-        for ii, (imgs, sizes, gt_bboxes_, gt_labels_, scale, id_) in tqdm(enumerate(dataloader)):
-            if len(gt_bboxes_) == 0:
-                continue
-            sizes = [sizes[0][0].item(), sizes[1][0].item()]
-            pred_bboxes_, pred_labels_, pred_scores_, features_ = trainer.faster_rcnn.predict(imgs, [sizes])
-
-            img_file = os.path.join(opt.voc_data_dir, 'JPEGImages', id_[0] + '.jpg')
-            ori_img = read_image(img_file, color=True)
-            img, pred_bboxes_, pred_labels_, scale_ = tsf((ori_img, pred_bboxes_[0], pred_labels_[0]))
-
-            #去除软标签和真值标签重叠过多的部分，去除错误的软标签
-            pred_bboxes_, pred_labels_, pred_scores_ = py_cpu_nms(
-                gt_bboxes_[0], gt_labels_[0], pred_bboxes_, pred_labels_, pred_scores_[0])
-
-            #存储软标签，这样存储不会使得GPU占用过多
-            np.save('label/' + str(id_[0]) + '.npy', pred_labels_.cpu())
-            np.save('bbox/' + str(id_[0]) + '.npy', pred_bboxes_.cpu())
-            np.save('feature/' + str(id_[0]) + '.npy', features_.cpu())
-            np.save('score/' + str(id_[0]) + '.npy', pred_scores_.cpu())
-
-        opt.predict_socre = 0.05
-    t.cuda.empty_cache()
+    # if opt.is_distillation == True:
+    #     opt.predict_socre = 0.3
+    #     for ii, (imgs, sizes, gt_bboxes_, gt_labels_, scale, id_) in tqdm(enumerate(dataloader)):
+    #         if len(gt_bboxes_) == 0:
+    #             continue
+    #         sizes = [sizes[0][0].item(), sizes[1][0].item()]
+    #         pred_bboxes_, pred_labels_, pred_scores_, features_ = trainer.faster_rcnn.predict(imgs, [sizes])
+    #
+    #         img_file = os.path.join(opt.voc_data_dir, 'JPEGImages', id_[0] + '.jpg')
+    #         ori_img = read_image(img_file, color=True)
+    #         img, pred_bboxes_, pred_labels_, scale_ = tsf((ori_img, pred_bboxes_[0], pred_labels_[0]))
+    #
+    #         #去除软标签和真值标签重叠过多的部分，去除错误的软标签
+    #         pred_bboxes_, pred_labels_, pred_scores_ = py_cpu_nms(
+    #             gt_bboxes_[0], gt_labels_[0], pred_bboxes_, pred_labels_, pred_scores_[0])
+    #
+    #         #存储软标签，这样存储不会使得GPU占用过多
+    #         np.save('s_label/label/' + str(id_[0]) + '.npy', pred_labels_.cpu())
+    #         np.save('s_label/bbox/' + str(id_[0]) + '.npy', pred_bboxes_.cpu())
+    #         np.save('s_label/feature/' + str(id_[0]) + '.npy', features_.cpu())
+    #         np.save('s_label/score/' + str(id_[0]) + '.npy', pred_scores_.cpu())
+    #
+    #     opt.predict_socre = 0.05
+    # t.cuda.empty_cache()
     # '''
 
     best_map = 0
@@ -116,10 +116,10 @@ def train(**kwargs):
             # 转化成pytorch能够计算的格式，转tensor格式
             if opt.is_distillation == True:
                 #读取软标签
-                teacher_pred_labels = np.load('label/' + str(id_[0]) + '.npy')
-                teacher_pred_bboxes = np.load('bbox/' + str(id_[0]) + '.npy')
-                teacher_pred_features_ = np.load('feature/' + str(id_[0]) + '.npy')
-                teacher_pred_scores = np.load('score/' + str(id_[0]) + '.npy')
+                teacher_pred_labels = np.load('s_label/label/' + str(id_[0]) + '.npy')
+                teacher_pred_bboxes = np.load('s_label/bbox/' + str(id_[0]) + '.npy')
+                teacher_pred_features_ = np.load('s_label/feature/' + str(id_[0]) + '.npy')
+                teacher_pred_scores = np.load('s_label/score/' + str(id_[0]) + '.npy')
                 #格式转换
                 teacher_pred_bboxes = teacher_pred_bboxes.astype(np.float32)
                 teacher_pred_labels = teacher_pred_labels.astype(np.int32)

@@ -35,7 +35,7 @@ rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (20480, rlimit[1]))
 
 matplotlib.use('agg')
-VOC_BBOX_LABEL_NAMES = opt.VOC_BBOX_LABEL_NAMES_all
+
 
 #CUDA_VISIBLE_DEVICES=1 python3 test.py --test_path="./checkpoints/fasterrcnn_11091854_0.4595028584047549.pth"
 
