@@ -36,7 +36,7 @@ class Config:
     pretrained_model = 'vgg16'
 
     # training
-    epoch = 100
+    epoch = 20
 
     use_adam = False  # Use Adam optimizer
     use_chainer = False  # try match everything as chainer
@@ -48,7 +48,7 @@ class Config:
     # model
     is_distillation = True
     only_use_cls_distillation = False
-    use_hint = False
+    use_hint = True
     testtxt = 'test'
     datatxt = 'trainval'
     load_path = "../fasterrcnn.pth"
