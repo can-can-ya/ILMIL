@@ -25,6 +25,7 @@ class Config:
     weight_decay = 0.0005
     lr_decay = 0.1  # 1e-3 -> 1e-4
     lr = 1e-4
+    best_map = 0
 
     # visualization
     env = 'faster-rcnn'  # visdom env
@@ -36,6 +37,7 @@ class Config:
     pretrained_model = 'vgg16'
 
     # training
+    start_epoch = 0
     epoch = 20
 
     use_adam = False  # Use Adam optimizer
@@ -46,18 +48,40 @@ class Config:
     threshold = 0.5
     test_num = 5000
     # model
-    is_distillation = True
-    only_use_cls_distillation = False
-    use_hint = True
+    is_distillation = False
+    only_use_cls_distillation = is_distillation and True
+    use_hint = is_distillation and True
     testtxt = 'test'
     datatxt = 'trainval'
     load_path = "../fasterrcnn.pth"
     # load_path = None
 
+    # 训练异常终止后恢复训练
+    resume = ""
+
     caffe_pretrain = False  # use caffe pretrained model instead of torchvision
     caffe_pretrain_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984'
 
     VOC_BBOX_LABEL_NAMES_all = (
+        'aeroplane',
+        'bicycle',
+        'bird',
+        'boat',
+        'bottle',
+        'bus',
+        'car',
+        'cat',
+        'chair',
+        'cow',
+        'diningtable',
+        'dog',
+        'horse',
+        'motorbike',
+        'person',
+        'pottedplant',
+        'sheep',
+        'sofa',
+        'train',
         'tvmonitor')
 
     VOC_BBOX_LABEL_NAMES_test = (
@@ -90,7 +114,8 @@ class Config:
             setattr(self, k, v)
 
         print('======user config========')
-        pprint(self._state_dict())
+        # pprint(self._state_dict())
+        print(self._state_dict())
         print('==========end============')
 
     def _state_dict(self):

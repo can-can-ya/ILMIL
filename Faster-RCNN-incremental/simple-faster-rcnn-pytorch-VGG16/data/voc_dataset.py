@@ -221,7 +221,17 @@ VOC_BBOX_LABEL_NAMES = (
     'car',
     'cat',
     'chair',
-    'cow')
+    'cow',
+    'diningtable',
+    'dog',
+    'horse',
+    'motorbike',
+    'person',
+    'pottedplant',
+    'sheep',
+    'sofa',
+    'train',
+    'tvmonitor')
 
 VOC_BBOX_LABEL_NAMES_all = (
     'aeroplane',

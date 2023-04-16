@@ -3,6 +3,7 @@ import cupy as cp
 
 from model.utils.bbox_tools import bbox2loc, bbox_iou, loc2bbox
 from model.utils.nms import non_maximum_suppression
+from utils.config import opt
 
 
 class ProposalTargetCreator(object):
@@ -100,7 +101,9 @@ class ProposalTargetCreator(object):
         # Offset range of classes from [0, n_fg_class - 1] to [1, n_fg_class].
         # The label with value 0 is the background.
         gt_roi_label = label[gt_assignment] + 1
-        gt_roi_score = score[gt_assignment]
+        gt_roi_score = None
+        if opt.is_distillation:
+            gt_roi_score = score[gt_assignment]
         # Select foreground RoIs as those with >= pos_iou_thresh IoU.
         pos_index = np.where(max_iou >= self.pos_iou_thresh)[0]
         pos_roi_per_this_image = int(min(pos_roi_per_image, pos_index.size))
@@ -122,9 +125,11 @@ class ProposalTargetCreator(object):
         # The indices that we're selecting (both positive and negative).
         keep_index = np.append(pos_index, neg_index)
         gt_roi_label = gt_roi_label[keep_index]
-        gt_roi_score = gt_roi_score[keep_index]
+        if opt.is_distillation:
+            gt_roi_score = gt_roi_score[keep_index]
         gt_roi_label[pos_roi_per_this_image:] = 0  # negative labels --> 0
-        gt_roi_score[pos_roi_per_this_image:] = 1
+        if opt.is_distillation:
+            gt_roi_score[pos_roi_per_this_image:] = 1
         sample_roi = roi[keep_index]
 
         # Compute offsets and scales to match sampled RoIs to the GTs.

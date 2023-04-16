@@ -14,14 +14,14 @@ from utils.vis_tool import Visualizer
 
 from utils.config import opt
 from torchnet.meter import ConfusionMeter, AverageValueMeter
-if opt.use_hint and opt.is_distillation:
+if opt.use_hint:
     LossTuple = namedtuple('LossTuple',
                            ['rpn_loc_loss',
                             'rpn_cls_loss',
                             'roi_loc_loss',
                             'roi_cls_loss',
                             'hint_loss',
-                            'scores_loss',
+                            # 'scores_loss',
                             'total_loss'
                             ])
 else:
@@ -30,6 +30,7 @@ else:
                             'rpn_cls_loss',
                             'roi_loc_loss',
                             'roi_cls_loss',
+                            # 'scores_loss',
                             'total_loss'
                             ])
 
@@ -129,14 +130,16 @@ class FasterRCNNTrainer(nn.Module):
             self.faster_rcnn.rpn(features, img_size, scale)
 
         # Since batch size is one, convert variables to singular form
-        # 不用知识蒸馏或者只蒸馏分类层（此时不需要教师的回归信息）
-        if opt.only_use_cls_distillation:
+        if opt.is_distillation:
+            if opt.only_use_cls_distillation:
+                bbox = bboxes[0]
+                label = labels[0]
+            else:
+                bbox = teacher_pred_bboxes_
+                label = teacher_pred_labels_
+        else:
             bbox = bboxes[0]
             label = labels[0]
-        # 使用知识蒸馏，而且使用全部蒸馏
-        else:
-            bbox = teacher_pred_bboxes_
-            label = teacher_pred_labels_
         rpn_score = rpn_scores[0]
         rpn_loc = rpn_locs[0]
         roi = rois
@@ -163,14 +166,14 @@ class FasterRCNNTrainer(nn.Module):
 
         # -----------------------以下开始计算各种损失----------------------------
         # score loss 分数损失（硬损失）
-        roi_score_test = roi_score.data
-        prob = F.softmax(at.totensor(roi_score_test), dim=1)
-        pred_scores, _ = t.max(prob, 1)
-        gt_roi_score = at.totensor(gt_roi_score)
-        gt_roi_score = gt_roi_score.cuda()
-        socres_loss = F.l1_loss(pred_scores, gt_roi_score)
+        # roi_score_test = roi_score.data
+        # prob = F.softmax(at.totensor(roi_score_test), dim=1)
+        # pred_scores, _ = t.max(prob, 1)
+        # gt_roi_score = at.totensor(gt_roi_score)
+        # gt_roi_score = gt_roi_score.cuda()
+        # socres_loss = F.l1_loss(pred_scores, gt_roi_score)
 
-        if len(teacher_pred_bboxes_) != 0 and opt.is_distillation == True and opt.only_use_cls_distillation:
+        if opt.only_use_cls_distillation:
             # 教师的建议框等信息  return sample_roi, gt_roi_loc, gt_roi_label, gt_roi_score
             teacher_sample_roi, teacher_pred_bboxes, teacher_pred_labels = self.proposal_target_creator(
                 roi,
@@ -207,7 +210,7 @@ class FasterRCNNTrainer(nn.Module):
             rpn_score, gt_rpn_label.cuda(), ignore_index=-1)
 
         # RPN的软损失
-        if len(teacher_pred_bboxes_) != 0 and opt.is_distillation == True:
+        if opt.only_use_cls_distillation:
             # 教师的RPN响应
             teacher_rpn_loc, teacher_rpn_label = self.anchor_target_creator(
                 at.tonumpy(teacher_pred_bboxes_),
@@ -243,7 +246,7 @@ class FasterRCNNTrainer(nn.Module):
         # ROI的硬分类损失
         roi_cls_loss = nn.CrossEntropyLoss()(roi_score, gt_roi_label.cuda())
 
-        if len(teacher_pred_bboxes_) != 0 and opt.is_distillation == True and opt.only_use_cls_distillation:
+        if opt.only_use_cls_distillation:
             n_sample = teacher_roi_cls_loc.shape[0]
             teacher_roi_cls_loc = teacher_roi_cls_loc.view(n_sample, -1, 4)
             teacher_roi_loc = teacher_roi_cls_loc[t.arange(0, n_sample).long().cuda(),
@@ -272,7 +275,7 @@ class FasterRCNNTrainer(nn.Module):
         self.roi_cm.add(at.totensor(roi_score, False),
                         gt_roi_label.data.long())
 
-        if opt.use_hint and opt.is_distillation:
+        if opt.use_hint:
             # 在此处计算二者的损失，将总和加到hint_loss中
             # stage1_hint_loss = l2_loss(middle_feature1, teacher_pred_stage_features1_)
             # stage2_hint_loss = l2_loss(middle_feature2, teacher_pred_stage_features2_)
@@ -287,11 +290,12 @@ class FasterRCNNTrainer(nn.Module):
             losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss,
                       roi_cls_loss,
                       hint_loss,
-                      socres_loss
+                      # socres_loss
                       ]
         else:
             losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss,
-                      roi_cls_loss
+                      roi_cls_loss,
+                      # socres_loss
                       ]
         # 将所有的loss相加并复制给losses.total_loss
         losses = losses + [sum(losses)]
@@ -310,7 +314,7 @@ class FasterRCNNTrainer(nn.Module):
         self.update_meters(losses)
         return losses
 
-    def save(self, save_optimizer=False, save_path=None, epoch=None, **kwargs):
+    def save(self, save_optimizer=True, save_path=None, results_file_name=None, lr=None, epoch=None, **kwargs):
         """serialize models include optimizer and other info
         return path where the model-file is stored.
 
@@ -325,20 +329,26 @@ class FasterRCNNTrainer(nn.Module):
         save_dict = dict()
 
         save_dict['model'] = self.faster_rcnn.state_dict()
-        save_dict['config'] = opt._state_dict()
-        save_dict['other_info'] = kwargs
+        save_dict['results_file_name'] = results_file_name
+        save_dict['lr'] = lr
+        save_dict['epoch'] = epoch
+        save_dict['best_map'] = kwargs['best_map']
+
+        # save_dict['config'] = opt._state_dict()
+        # save_dict['other_info'] = kwargs
         save_dict['vis_info'] = self.vis.state_dict()
 
         if save_optimizer:
             save_dict['optimizer'] = self.optimizer.state_dict()
 
         if save_path is None:
-            timestr = time.strftime('%m%d%H%M')
-            save_path = 'checkpoints/fasterrcnn_%s' % timestr
+            timestr = time.strftime("%Y%m%d-%H%M%S")
+            save_path = 'checkpoints/' + str(len(opt.VOC_BBOX_LABEL_NAMES_all)) + '-' + str(len(opt.VOC_BBOX_LABEL_NAMES_test)) + '/'
+            save_path += 'fasterrcnn_%s' % timestr
             save_path += '_%s' % epoch
             for k_, v_ in kwargs.items():
                 save_path += '_%s' % v_
-                save_path += '.pth'
+            save_path += '.pth'
 
         save_dir = os.path.dirname(save_path)
         if not os.path.exists(save_dir):
@@ -349,12 +359,12 @@ class FasterRCNNTrainer(nn.Module):
         return save_path
 
     # 加载模型
-    def load(self, path, load_optimizer=True, parse_opt=False, ):
+    def load(self, path, load_optimizer=False, parse_opt=False, ):
         state_dict = t.load(path)
         # print state_dict
         if 'model' in state_dict:
             self.faster_rcnn.load_state_dict(state_dict['model'])
-            print('load own model')
+            # print('load own model')
             # print 1
         else:  # legacy way, for backward compatibility
             self.faster_rcnn.load_state_dict(state_dict)

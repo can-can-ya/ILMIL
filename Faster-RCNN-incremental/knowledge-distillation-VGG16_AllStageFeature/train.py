@@ -25,11 +25,12 @@ from matplotlib import pyplot as plt
 from data.util import read_image
 from data import util
 from utils.utils import *
+import datetime
 # from torchstat import stat
 import argparse
 # from uitils import *
 # 更改gpu使用的核心
-# os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # 使用作者的模型训练
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -53,7 +54,7 @@ def train(**kwargs):
                                        batch_size=1,
                                        num_workers=opt.test_num_workers,
                                        shuffle=False,
-                                       # pin_memory=True
+                                       pin_memory=True
                                        )
     testset_all = TestDataset_all(opt, 'test')
     test_all_dataloader = data_.DataLoader(testset_all,
@@ -62,6 +63,10 @@ def train(**kwargs):
                                            shuffle=False,
                                            pin_memory=True
                                            )
+
+    # 用来保存log_info的文件
+    results_file = "results{}_isDistillation{}_onlyUseClsDistillation{}_useHint{}_4{}.txt".format(
+        datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), opt.is_distillation, opt.only_use_cls_distillation, opt.use_hint, opt.use_hint4)
 
     tsf = Transform(opt.min_size, opt.max_size)
     faster_rcnn = FasterRCNNVGG16()
@@ -73,8 +78,18 @@ def train(**kwargs):
         trainer.load(opt.load_path)
         print('load pretrained model from %s' % opt.load_path)
 
-    # 提取蒸馏知识所需要的软标签
-    if opt.is_distillation == True:
+    if opt.resume: # 恢复训练
+        state_dict = t.load(opt.resume)
+        trainer.faster_rcnn.load_state_dict(state_dict['model'])
+        results_file = state_dict['results_file_name']
+        opt.lr = state_dict['lr']
+        opt.best_map = state_dict['best_map']
+        opt.start_epoch = state_dict['epoch'] + 1
+        trainer.optimizer.load_state_dict(state_dict['optimizer'])
+        trainer.vis.load_state_dict(state_dict['vis_info'])
+
+    # 提取蒸馏知识所需要的软标签（恢复训练时不能执行这段代码，教师模型和数据集一致时可以注释掉该段代码以提高训练速度）
+    if opt.is_distillation == True and not opt.resume:
         opt.predict_socre = 0.3
         for ii, (imgs, sizes, gt_bboxes_, gt_labels_, scale, id_) in tqdm(enumerate(dataloader)):
             if len(gt_bboxes_) == 0:
@@ -103,12 +118,12 @@ def train(**kwargs):
         opt.predict_socre = 0.05
     t.cuda.empty_cache()
 
-    # # visdom 显示所有类别标签名
+    # visdom 显示所有类别标签名
     # trainer.vis.text(dataset.db.label_names, win='labels')
-    best_map = 0
+    best_map = opt.best_map
     lr_ = opt.lr
 
-    for epoch in range(opt.epoch):
+    for epoch in range(opt.start_epoch, opt.epoch):
         print('epoch=%d' % epoch)
 
         # 重置混淆矩阵
@@ -166,18 +181,57 @@ def train(**kwargs):
             else:
                 trainer.train_step(img, bbox, label, scale, epoch)
 
+            if (ii + 1) % opt.plot_every == 0:
+                # if os.path.exists(opt.debug_file):
+                #     ipdb.set_trace() # 用于Ipython调试
+
+                # plot loss
+                trainer.vis.plot_many(trainer.get_meter_data())
+
+                # plot groud truth bboxes
+                ori_img_ = inverse_normalize(at.tonumpy(img[0]))
+                gt_img = visdom_bbox(ori_img_,
+                                     at.tonumpy(bbox_[0]),
+                                     at.tonumpy(label_[0]))
+                trainer.vis.img('gt_img', gt_img)
+
+                # plot predicti bboxes
+                _bboxes, _labels, _scores, _, _ = trainer.faster_rcnn.predict([ori_img_], visualize=True)
+                pred_img = visdom_bbox(ori_img_,
+                                       at.tonumpy(_bboxes[0]),
+                                       at.tonumpy(_labels[0]).reshape(-1),
+                                       at.tonumpy(_scores[0]))
+                trainer.vis.img('pred_img', pred_img)
+
+                # rpn confusion matrix(meter)
+                trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
+                # roi confusion matrix
+                trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
+
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
+        trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
-        log_info = 'lr:{},ap:{}, map:{},loss:{}'.format(str(lr_),
-                                                        str(eval_result['ap']),
-                                                        str(eval_result['map']),
-                                                        str(trainer.get_meter_data()))
+        log_info = 'epoch:{}\nlr:{}\nap:{}\nmap:{}\nloss:{}\n'.format(str(epoch),
+                                                                      str(lr_),
+                                                                      str(eval_result['ap']),
+                                                                      str(eval_result['map']),
+                                                                      str(trainer.get_meter_data()))  # 返回的是平均损失
         print(log_info)
+        trainer.vis.log(log_info)
+        # write into txt
+        result_path = 'train_eval_result/' + str(len(opt.VOC_BBOX_LABEL_NAMES_all)) + '-' + str(len(opt.VOC_BBOX_LABEL_NAMES_test)) + '/'
+        save_dir = os.path.dirname(result_path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        with open(result_path + results_file, "a") as f:
+            if epoch == 0: # 第一次把配置信息也写入文件中
+                f.write(str(opt._state_dict()) + '\n\n')
+            f.write(log_info + "\n")
 
         # 保存最好结果并记住路径
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
-            best_path = trainer.save(best_map=best_map, epoch=epoch)
+            best_path = trainer.save(results_file_name=results_file, lr = lr_, best_map=best_map, epoch=epoch, isDistillation='isDistillation' + str(opt.is_distillation), onlyUseClsDistillation='onlyUseClsDistillation' + str(opt.only_use_cls_distillation), useHint='useHint' + str(opt.use_hint), useHint4='4' + str(opt.use_hint4))
 
         # 每10轮加载前面最好权重，并且减少学习率
         if epoch % 10 == 0 and epoch != 0:

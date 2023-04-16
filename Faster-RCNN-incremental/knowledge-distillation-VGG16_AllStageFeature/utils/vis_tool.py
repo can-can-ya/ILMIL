@@ -212,7 +212,7 @@ class Visualizer(object):
         """
         self.log({'loss':1,'lr':0.0001})
         """
-        self.log_text += ('[{time}] {info} <br>'.format(
+        self.log_text += ('[{time}] {info} <br><br>'.format(
             time=time.strftime('%m%d_%H%M%S'),
             info=info))
         self.vis.text(self.log_text, win)
@@ -230,7 +230,7 @@ class Visualizer(object):
 
     def load_state_dict(self, d):
         self.vis = visdom.Visdom(
-            env=d.get('env', self.vis.env), **(self.d.get('vis_kw')))
+            env=d.get('env', self.vis.env), **(d.get('vis_kw')))
         self.log_text = d.get('log_text', '')
         self.index = d.get('index', dict())
         return self

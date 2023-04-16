@@ -13,10 +13,12 @@ from trainer import FasterRCNNTrainer
 from utils import array_tool as at
 from utils.vis_tool import visdom_bbox
 from utils.eval_tool import eval_detection_voc
-# os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+# 更改gpu使用的核心
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # fix for ulimit
 # https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667
 import resource
+import datetime
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (20480, rlimit[1]))
@@ -53,16 +55,16 @@ def train(**kwargs):
 
     dataset = Dataset(opt)
     print('load data')
-    dataloader = data_.DataLoader(dataset, \
-                                  batch_size=1, \
-                                  shuffle=True, \
+    dataloader = data_.DataLoader(dataset,
+                                  batch_size=1,
+                                  shuffle=True,
                                   pin_memory=True,
                                   num_workers=opt.num_workers)
     testset = TestDataset(opt)
     test_dataloader = data_.DataLoader(testset,
                                        batch_size=1,
                                        num_workers=opt.test_num_workers,
-                                       shuffle=False, \
+                                       shuffle=False,
                                        pin_memory=True
                                        )
     testset_all = TestDataset_all(opt, 'test')
@@ -72,6 +74,10 @@ def train(**kwargs):
                                            shuffle=False,
                                            pin_memory=True
                                            )
+
+    # 用来保存log_info的文件
+    results_file = "results_{}.txt".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+
     faster_rcnn = FasterRCNNVGG16()
     # print(faster_rcnn)
     print('model construct completed')
@@ -122,12 +128,16 @@ def train(**kwargs):
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
         trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
-        log_info = 'lr:{}, ap:{}, map:{}, loss:{}'.format(str(lr_),
-                                                  str(eval_result['ap']),
-                                                  str(eval_result['map']),
-                                                  str(trainer.get_meter_data()))
+        log_info = 'epoch:{}\nlr:{}\nap:{}\nmap:{}\nloss:{}\n'.format(str(epoch),
+                                                                      str(lr_),
+                                                                      str(eval_result['ap']),
+                                                                      str(eval_result['map']),
+                                                                      str(trainer.get_meter_data()))
         print(log_info)
         trainer.vis.log(log_info)
+        # write into txt
+        with open(results_file, "a") as f:
+            f.write(log_info + "\n")
 
         if eval_result['map'] > best_map:
             best_map = eval_result['map']

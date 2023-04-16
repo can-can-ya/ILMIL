@@ -13,10 +13,12 @@ from trainer import FasterRCNNTrainer
 from utils import array_tool as at
 from utils.vis_tool import visdom_bbox
 from utils.eval_tool import eval_detection_voc
-# os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+# 更改gpu使用的核心
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # fix for ulimit
 # https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667
 import resource
+import datetime
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (20480, rlimit[1]))
@@ -52,25 +54,29 @@ def train(**kwargs):
 
     dataset = Dataset(opt)
     print('load data')
-    dataloader = data_.DataLoader(dataset, \
-                                  batch_size=1, \
-                                  shuffle=True, \
+    dataloader = data_.DataLoader(dataset,
+                                  batch_size=1,
+                                  shuffle=True,
                                   pin_memory=True,
                                   num_workers=opt.num_workers)
     testset = TestDataset(opt)
     test_dataloader = data_.DataLoader(testset,
                                        batch_size=1,
                                        num_workers=opt.test_num_workers,
-                                       shuffle=False, \
-                                       # pin_memory=True
+                                       shuffle=False,
+                                       pin_memory=True
                                        )
     testset_all = TestDataset_all(opt, 'test')
     test_all_dataloader = data_.DataLoader(testset_all,
                                            batch_size=1,
                                            num_workers=opt.test_num_workers,
                                            shuffle=False,
-                                           # pin_memory=True
+                                           pin_memory=True
                                            )
+
+    # 用来保存log_info的文件
+    results_file = "results_{}.txt".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+
     faster_rcnn = FasterRCNNVGG16()
     print('model construct completed')
     trainer = FasterRCNNTrainer(faster_rcnn).cuda()
@@ -91,15 +97,25 @@ def train(**kwargs):
 
         eval_result = eval(test_all_dataloader, faster_rcnn, test_num=opt.test_num)
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
-        log_info = 'lr:{}, ap:{}, map:{}, loss:{}'.format(str(lr_),
+        log_info = 'epoch:{}\nlr:{}\nap:{}\nmap:{}\nloss:{}\n'.format(str(epoch),
+                                                  str(lr_),
                                                   str(eval_result['ap']),
                                                   str(eval_result['map']),
                                                   str(trainer.get_meter_data()))
         print(log_info)
+        # write into txt
+        with open(results_file, "a") as f:
+            f.write(log_info + "\n")
 
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map, epoch=epoch)
+
+        # 每10轮加载前面最好权重，并且减少学习率
+        if epoch % 10 == 0 and epoch != 0:
+            trainer.load(best_path)
+            trainer.faster_rcnn.scale_lr(opt.lr_decay)
+            lr_ = lr_ * opt.lr_decay
 
         # trainer.save(best_map=eval_result['map'], epoch=epoch)
 if __name__ == '__main__':
