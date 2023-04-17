@@ -23,7 +23,7 @@ class Config:
     # param for optimizer
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
-    lr_decay = 0.1  # 1e-3 -> 1e-4
+    lr_decay = 0.33
     lr = 1e-4
     best_map = 0
 
@@ -61,6 +61,8 @@ class Config:
 
     caffe_pretrain = False  # use caffe pretrained model instead of torchvision
     caffe_pretrain_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984'
+
+    test_path = ""
 
     VOC_BBOX_LABEL_NAMES_all = (
         'aeroplane',

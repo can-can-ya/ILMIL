@@ -30,7 +30,7 @@ import datetime
 import argparse
 # from uitils import *
 # 更改gpu使用的核心
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # 使用作者的模型训练
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -82,11 +82,11 @@ def train(**kwargs):
         state_dict = t.load(opt.resume)
         trainer.faster_rcnn.load_state_dict(state_dict['model'])
         results_file = state_dict['results_file_name']
-        opt.lr = state_dict['lr']
         opt.best_map = state_dict['best_map']
         opt.start_epoch = state_dict['epoch'] + 1
         trainer.optimizer.load_state_dict(state_dict['optimizer'])
         trainer.vis.load_state_dict(state_dict['vis_info'])
+        best_path = state_dict['save_path']
 
     # 提取蒸馏知识所需要的软标签（恢复训练时不能执行这段代码，教师模型和数据集一致时可以注释掉该段代码以提高训练速度）
     if opt.is_distillation == True and not opt.resume:
@@ -121,7 +121,10 @@ def train(**kwargs):
     # visdom 显示所有类别标签名
     # trainer.vis.text(dataset.db.label_names, win='labels')
     best_map = opt.best_map
-    lr_ = opt.lr
+
+    # 手动调节学习率
+    r = 1 # 大于1增大学习率， 等于1减小学习率
+    trainer.faster_rcnn.scale_lr(r)
 
     for epoch in range(opt.start_epoch, opt.epoch):
         print('epoch=%d' % epoch)
@@ -231,13 +234,12 @@ def train(**kwargs):
         # 保存最好结果并记住路径
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
-            best_path = trainer.save(results_file_name=results_file, lr = lr_, best_map=best_map, epoch=epoch, isDistillation='isDistillation' + str(opt.is_distillation), onlyUseClsDistillation='onlyUseClsDistillation' + str(opt.only_use_cls_distillation), useHint='useHint' + str(opt.use_hint), useHint4='4' + str(opt.use_hint4))
+            best_path = trainer.save(results_file_name=results_file, best_map=best_map, epoch=epoch, isDistillation='isDistillation' + str(opt.is_distillation), onlyUseClsDistillation='onlyUseClsDistillation' + str(opt.only_use_cls_distillation), useHint='useHint' + str(opt.use_hint), useHint4='4' + str(opt.use_hint4))
 
         # 每10轮加载前面最好权重，并且减少学习率
-        if epoch % 10 == 0 and epoch != 0:
+        if (epoch + 1) % 10 == 0 and epoch != 0:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
-            lr_ = lr_ * opt.lr_decay
 
 
 if __name__ == '__main__':

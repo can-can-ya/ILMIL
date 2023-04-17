@@ -9,7 +9,7 @@ import ipdb
 import matplotlib
 from tqdm import tqdm
 import torch as t
-import cv2
+
 import resource
 
 from utils.config import opt
@@ -28,7 +28,7 @@ from utils.utils import *
 import argparse
 #from uitils import *
 #更改gpu使用的核心
-#os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 #使用作者的模型训练
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -59,7 +59,7 @@ def test(**kwargs):
     dataloader = data_.DataLoader(dataset,
                                   batch_size=1,
                                   shuffle=True,
-                                  # pin_memory=True,
+                                  pin_memory=True,
                                   num_workers=opt.num_workers)
     testset = TestDataset(opt)
     test_dataloader = data_.DataLoader(testset,
@@ -92,13 +92,18 @@ def test(**kwargs):
     eval_result = eval(test_all_dataloader, faster_rcnn, test_num=opt.test_num)
     trainer.vis.plot('test_map', eval_result['map'])
     lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
-    log_info = 'lr:{}, ap:{}, map:{}, loss:{}'.format(str(lr_),
+    log_info = 'lr:{}\nap:{}\nmap:{}\nloss:{}'.format(str(lr_),
                                                         str(eval_result['ap']),
                                                         str(eval_result['map']),
                                                         str(trainer.get_meter_data()))
     print(log_info)
     trainer.vis.log(log_info)
 
+    result_path = 'eval_result/'
+    results_file = '_'.join(opt.test_path.split('/')[-2:]) + '.txt'
+
+    with open(result_path + results_file, "w") as f:
+        f.write(log_info)
 
 if __name__ == '__main__':
     test()

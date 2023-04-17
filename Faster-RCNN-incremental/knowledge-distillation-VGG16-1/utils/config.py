@@ -9,8 +9,8 @@ from pprint import pprint
 
 class Config:
     # data
+    # voc_data_dir = '../../BCCD_Dataset/BCCD'
     voc_data_dir = '/home/goujiaxiang/Code/ILMIL/ILMIL/VOCdevkit/VOC2007'
-
     min_size = 600  # image resize
     max_size = 1000  # image resize
     num_workers = 8
@@ -23,12 +23,12 @@ class Config:
     # param for optimizer
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
-    lr_decay = 1  # 尝试手动调节
-    lr = 1e-3
+    lr_decay = 0.33
+    lr = 1e-4
     best_map = 0
 
     # visualization
-    env = 'faster-rcnn-all'  # visdom env
+    env = 'faster-rcnn-1'  # visdom env
     port = 8097
     plot_every = 40  # vis every N iter
 
@@ -38,7 +38,7 @@ class Config:
 
     # training
     start_epoch = 0
-    epoch = 60
+    epoch = 20
 
     use_adam = False  # Use Adam optimizer
     use_chainer = False  # try match everything as chainer
@@ -49,23 +49,18 @@ class Config:
     test_num = 5000
     # model
     is_distillation = False
-    only_use_cls_distillation = is_distillation and False
+    only_use_cls_distillation = is_distillation and True
     use_hint = is_distillation and True
-    use_hint4 = use_hint and True # 用不用feature4来计算损失，依赖于use_hint
     testtxt = 'test'
     datatxt = 'trainval'
-    load_path = ""
+    load_path = "../fasterrcnn.pth"
+    # load_path = None
 
     # 训练异常终止后恢复训练
     resume = ""
-    #load_path = 'checkpoints/fasterrcnn_12222105_0.712649824453_caffe_pretrain.pth'
-    #load_path = 'pretrained_model/faster_rcnn_1_7_10021_remove.pth'
-
-    #load_path = None
 
     caffe_pretrain = False  # use caffe pretrained model instead of torchvision
-    #caffe_pretrain_path = 'pretrained_model/vgg16_caffe.pth'
-    caffe_pretrain_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984_te_su.pth'
+    caffe_pretrain_path = 'pretrained_model/fasterrcnn_12231419_16_0.7089819173484984'
 
     test_path = ""
 
@@ -88,8 +83,8 @@ class Config:
         'pottedplant',
         'sheep',
         'sofa',
-        'train',
-        'tvmonitor')
+        'train'
+    )
 
     VOC_BBOX_LABEL_NAMES_test = (
         'aeroplane',
@@ -110,8 +105,7 @@ class Config:
         'pottedplant',
         'sheep',
         'sofa',
-        'train',
-        'tvmonitor'
+        'train'
     )
     def _parse(self, kwargs):
         state_dict = self._state_dict()

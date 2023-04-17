@@ -197,36 +197,36 @@ class VOCBboxDataset_test:
             # if name not in VOC_BBOX_LABEL_NAMES_all:
             #     # print 1
             #     continue
-            if opt.is_distillation==True:
-                if name not in opt.VOC_BBOX_LABEL_NAMES_test:
-                    continue
+            # if opt.is_distillation==True:
+            if name not in opt.VOC_BBOX_LABEL_NAMES_test:
+                continue
 
-                if not self.use_difficult and int(obj.find('difficult').text) == 1:
-                    continue
+            if not self.use_difficult and int(obj.find('difficult').text) == 1:
+                continue
 
-                difficult.append(int(obj.find('difficult').text))
-                bndbox_anno = obj.find('bndbox')
-                # subtract 1 to make pixel indexes 0-based
-                bbox.append([
-                    int(bndbox_anno.find(tag).text) - 1
-                    for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
+            difficult.append(int(obj.find('difficult').text))
+            bndbox_anno = obj.find('bndbox')
+            # subtract 1 to make pixel indexes 0-based
+            bbox.append([
+                int(bndbox_anno.find(tag).text) - 1
+                for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
 
-                label.append(opt.VOC_BBOX_LABEL_NAMES_test.index(name))
-            else:
-                if name not in opt.VOC_BBOX_LABEL_NAMES_all:
-                    # print 1
-                    continue
-                if not self.use_difficult and int(obj.find('difficult').text) == 1:
-                    continue
-
-                difficult.append(int(obj.find('difficult').text))
-                bndbox_anno = obj.find('bndbox')
-                # subtract 1 to make pixel indexes 0-based
-                bbox.append([
-                    int(bndbox_anno.find(tag).text) - 1
-                    for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
-
-                label.append(opt.VOC_BBOX_LABEL_NAMES_test.index(name))
+            label.append(opt.VOC_BBOX_LABEL_NAMES_test.index(name))
+            # else:
+            #     if name not in opt.VOC_BBOX_LABEL_NAMES_all:
+            #         # print 1
+            #         continue
+            #     if not self.use_difficult and int(obj.find('difficult').text) == 1:
+            #         continue
+            #
+            #     difficult.append(int(obj.find('difficult').text))
+            #     bndbox_anno = obj.find('bndbox')
+            #     # subtract 1 to make pixel indexes 0-based
+            #     bbox.append([
+            #         int(bndbox_anno.find(tag).text) - 1
+            #         for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
+            #
+            #     label.append(opt.VOC_BBOX_LABEL_NAMES_test.index(name))
 
         # np.stack在axis=i上增加一维。这边似乎只是转为np型数组
         # 由于这边要做类别增量，可能出现图像没有bbox，所有加一个判断
