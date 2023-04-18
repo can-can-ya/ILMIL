@@ -11,7 +11,7 @@ from matplotlib import pyplot as plot
 # from data.voc_dataset import VOC_BBOX_LABEL_NAMES
 
 #
-VOC_BBOX_LABEL_NAMES = opt.VOC_BBOX_LABEL_NAMES_all
+VOC_BBOX_LABEL_NAMES = opt.VOC_BBOX_LABEL_NAMES_test
 
 
 def vis_image(img, ax=None):
@@ -67,7 +67,7 @@ def vis_bbox(img, bbox, label=None, score=None, ax=None):
 
     """
 
-    label_names = list(VOC_BBOX_LABEL_NAMES) + ['bg']
+    label_names = list(VOC_BBOX_LABEL_NAMES)
     # add for index `-1`
     if label is not None and not len(bbox) == len(label):
         raise ValueError('The length of label must be same as that of bbox')
@@ -82,18 +82,12 @@ def vis_bbox(img, bbox, label=None, score=None, ax=None):
         return ax
 
     for i, bb in enumerate(bbox):
-        xy = (bb[1], bb[0])
-        height = bb[2] - bb[0]
-        width = bb[3] - bb[1]
-        ax.add_patch(plot.Rectangle(
-            xy, width, height, fill=False, edgecolor='red', linewidth=2))
-
         caption = list()
 
         if label is not None and label_names is not None:
             lb = label[i]
-            if not (-1 <= lb < len(label_names)):  # modfy here to add backgroud
-                raise ValueError('No corresponding name is given')
+            if not (-1 < lb < len(label_names)):
+                continue
             caption.append(label_names[lb])
         if score is not None:
             sc = score[i]
@@ -104,6 +98,13 @@ def vis_bbox(img, bbox, label=None, score=None, ax=None):
                     ': '.join(caption),
                     style='italic',
                     bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 0})
+
+        xy = (bb[1], bb[0])
+        height = bb[2] - bb[0]
+        width = bb[3] - bb[1]
+        ax.add_patch(plot.Rectangle(
+            xy, width, height, fill=False, edgecolor='red', linewidth=2))
+
     return ax
 
 

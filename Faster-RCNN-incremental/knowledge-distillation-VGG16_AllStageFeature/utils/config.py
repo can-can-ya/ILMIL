@@ -24,8 +24,11 @@ class Config:
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
     lr_decay = 1  # 尝试手动调节
+    lr_decay_step = 10 # 降低学习率的间隔
     lr = 1e-3
     best_map = 0
+    # 手动调节学习率
+    r = 0.5  # 大于1增大学习率， 等于1减小学习率
 
     # visualization
     env = 'faster-rcnn-all'  # visdom env
@@ -38,7 +41,7 @@ class Config:
 
     # training
     start_epoch = 0
-    epoch = 60
+    epoch = 90
 
     use_adam = False  # Use Adam optimizer
     use_chainer = False  # try match everything as chainer
@@ -57,7 +60,7 @@ class Config:
     load_path = ""
 
     # 训练异常终止后恢复训练
-    resume = ""
+    resume = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/knowledge-distillation-VGG16_AllStageFeature/checkpoints/20-20/fasterrcnn_20230418-194345_57_0.21110241429938856_isDistillationFalse_onlyUseClsDistillationFalse_useHintFalse_4False.pth"
     #load_path = 'checkpoints/fasterrcnn_12222105_0.712649824453_caffe_pretrain.pth'
     #load_path = 'pretrained_model/faster_rcnn_1_7_10021_remove.pth'
 

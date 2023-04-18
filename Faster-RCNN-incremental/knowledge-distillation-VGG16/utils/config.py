@@ -24,6 +24,7 @@ class Config:
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
     lr_decay = 0.33
+    lr_decay_step = 5 # 降低学习率的间隔
     lr = 1e-4
     best_map = 0
 
@@ -64,6 +65,9 @@ class Config:
 
     test_path = ""
 
+    predict_model_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/fasterrcnn.pth"
+    predict_picture_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/VOCdevkit/VOC2007/JPEGImages/000001.jpg"
+
     VOC_BBOX_LABEL_NAMES_all = (
         'aeroplane',
         'bicycle',
@@ -79,12 +83,8 @@ class Config:
         'dog',
         'horse',
         'motorbike',
-        'person',
-        'pottedplant',
-        'sheep',
-        'sofa',
-        'train',
-        'tvmonitor')
+        'person'
+    )
 
     VOC_BBOX_LABEL_NAMES_test = (
         'aeroplane',
@@ -101,12 +101,7 @@ class Config:
         'dog',
         'horse',
         'motorbike',
-        'person',
-        'pottedplant',
-        'sheep',
-        'sofa',
-        'train',
-        'tvmonitor'
+        'person'
     )
     def _parse(self, kwargs):
         state_dict = self._state_dict()

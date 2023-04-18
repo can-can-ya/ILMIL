@@ -24,6 +24,7 @@ class Config:
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
     lr_decay = 0.33
+    lr_decay_step = 5 # 降低学习率的间隔
     lr = 1e-4
     best_map = 0
 
@@ -74,16 +75,7 @@ class Config:
         'car',
         'cat',
         'chair',
-        'cow',
-        'diningtable',
-        'dog',
-        'horse',
-        'motorbike',
-        'person',
-        'pottedplant',
-        'sheep',
-        'sofa',
-        'train'
+        'cow'
     )
 
     VOC_BBOX_LABEL_NAMES_test = (
@@ -96,16 +88,7 @@ class Config:
         'car',
         'cat',
         'chair',
-        'cow',
-        'diningtable',
-        'dog',
-        'horse',
-        'motorbike',
-        'person',
-        'pottedplant',
-        'sheep',
-        'sofa',
-        'train'
+        'cow'
     )
     def _parse(self, kwargs):
         state_dict = self._state_dict()

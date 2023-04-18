@@ -27,7 +27,7 @@ from data import util
 from utils.utils import *
 import datetime
 # 更改gpu使用的核心
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -82,6 +82,8 @@ def train(**kwargs):
         trainer.optimizer.load_state_dict(state_dict['optimizer'])
         trainer.vis.load_state_dict(state_dict['vis_info'])
         best_path = state_dict['save_path']
+        if opt.start_epoch % opt.lr_decay_step == 0:
+            trainer.faster_rcnn.scale_lr(opt.lr_decay)
 
     # 提取蒸馏知识所需要的软标签（恢复训练时不能执行这段代码，教师模型和数据集一致时可以注释掉该段代码以提高训练速度）
     if opt.is_distillation == True and not opt.resume:
@@ -212,8 +214,8 @@ def train(**kwargs):
             best_map = eval_result['map']
             best_path = trainer.save(results_file_name=results_file, best_map=best_map, epoch=epoch, isDistillation='isDistillation' + str(opt.is_distillation), onlyUseClsDistillation='onlyUseClsDistillation' + str(opt.only_use_cls_distillation), useHint='useHint' + str(opt.use_hint))
 
-        # 每5轮加载前面最好权重，并且减少学习率
-        if (epoch + 1) % 5 == 0 and epoch != 0:
+        # 每几轮加载前面最好权重，并且减少学习率
+        if (epoch + 1) % opt.lr_decay_step == 0:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
 

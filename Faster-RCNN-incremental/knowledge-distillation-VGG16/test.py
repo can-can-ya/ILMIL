@@ -88,11 +88,8 @@ def test(**kwargs):
     trainer.eval()
     eval_result = eval(test_all_dataloader, faster_rcnn, test_num=opt.test_num)
     trainer.vis.plot('test_map', eval_result['map'])
-    lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
-    log_info = 'lr:{}\nap:{}\nmap:{}\nloss:{}'.format(str(lr_),
-                                                        str(eval_result['ap']),
-                                                        str(eval_result['map']),
-                                                        str(trainer.get_meter_data()))
+    log_info = 'ap:{}\nmap:{}'.format(str(eval_result['ap']),
+                                        str(eval_result['map']))
     print(log_info)
     trainer.vis.log(log_info)
 
