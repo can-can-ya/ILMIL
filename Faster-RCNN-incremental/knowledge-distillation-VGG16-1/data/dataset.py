@@ -104,9 +104,9 @@ class Transform(object):
 
 class Dataset:
     # 训练集 有5个输出
-    def __init__(self, opt):
+    def __init__(self, opt, use_difficult = True):
         self.opt = opt
-        self.db = VOCBboxDataset(opt.voc_data_dir, split=opt.datatxt)
+        self.db = VOCBboxDataset(opt.voc_data_dir, split=opt.datatxt, use_difficult=use_difficult)
         self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):

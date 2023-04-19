@@ -67,8 +67,9 @@ class Config:
 
     predict_model_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/fasterrcnn.pth"
     predict_picture_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/VOCdevkit/VOC2007/JPEGImages/000001.jpg"
+    predict_GT = True # 是否有GT
 
-    VOC_BBOX_LABEL_NAMES_all = (
+    VOC_BBOX_LABEL_NAMES_all = ( # 训练类别
         'aeroplane',
         'bicycle',
         'bird',
@@ -83,10 +84,15 @@ class Config:
         'dog',
         'horse',
         'motorbike',
-        'person'
+        'person',
+        'pottedplant',
+        'sheep',
+        'sofa',
+        'train',
+        'tvmonitor'
     )
 
-    VOC_BBOX_LABEL_NAMES_test = (
+    VOC_BBOX_LABEL_NAMES_test = ( # 验证、测试和预测的类别（模型多预测出的类别不影响，可以看做是没有多余检测能力）
         'aeroplane',
         'bicycle',
         'bird',
@@ -101,7 +107,12 @@ class Config:
         'dog',
         'horse',
         'motorbike',
-        'person'
+        'person',
+        'pottedplant',
+        'sheep',
+        'sofa',
+        'train',
+        'tvmonitor'
     )
     def _parse(self, kwargs):
         state_dict = self._state_dict()

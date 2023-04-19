@@ -173,7 +173,7 @@ def train(**kwargs):
                 gt_img = visdom_bbox(ori_img_,
                                      at.tonumpy(bbox_[0]),
                                      at.tonumpy(label_[0]))
-                trainer.vis.img('gt_img', gt_img)
+                trainer.vis.img('gt_img' + '_' + id_[0], gt_img)
 
                 # plot predicti bboxes
                 _bboxes, _labels, _scores, _ = trainer.faster_rcnn.predict([ori_img_], visualize=True)
@@ -189,7 +189,10 @@ def train(**kwargs):
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
 
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
-        trainer.vis.plot('test_map', eval_result['map'])
+        if len(opt.VOC_BBOX_LABEL_NAMES_test) > len(opt.VOC_BBOX_LABEL_NAMES_all): # 增量学习，着重看增量学习类别的map，所以绘制的曲线和保存权重的依据都以此为基准
+            trainer.vis.plot('test_map', np.nanmean(eval_result['ap'][:len(opt.VOC_BBOX_LABEL_NAMES_test)][-len(opt.VOC_BBOX_LABEL_NAMES_all):]))
+        else:
+            trainer.vis.plot('test_map', eval_result['map'])
         lr_ = trainer.faster_rcnn.optimizer.param_groups[0]['lr']
         log_info = 'epoch:{}\nlr:{}\nap:{}\nmap:{}\nloss:{}\n'.format(str(epoch),
                                                                       str(lr_),
@@ -210,9 +213,18 @@ def train(**kwargs):
             f.write(log_info + "\n")
 
         # 保存最好结果并记住路径
-        if eval_result['map'] > best_map:
-            best_map = eval_result['map']
-            best_path = trainer.save(results_file_name=results_file, best_map=best_map, epoch=epoch, isDistillation='isDistillation' + str(opt.is_distillation), onlyUseClsDistillation='onlyUseClsDistillation' + str(opt.only_use_cls_distillation), useHint='useHint' + str(opt.use_hint))
+        if len(opt.VOC_BBOX_LABEL_NAMES_test) > len(opt.VOC_BBOX_LABEL_NAMES_all): # 增量学习，着重看增量学习类别的map，所以绘制的曲线和保存权重的依据都以此为基准
+            if np.nanmean(eval_result['ap'][:len(opt.VOC_BBOX_LABEL_NAMES_test)][-len(opt.VOC_BBOX_LABEL_NAMES_all):]) > best_map:
+                best_map = np.nanmean(eval_result['ap'][:len(opt.VOC_BBOX_LABEL_NAMES_test)][-len(opt.VOC_BBOX_LABEL_NAMES_all):])
+                best_path = trainer.save(results_file_name=results_file, best_map=best_map, epoch=epoch,
+                                         isDistillation='isDistillation' + str(opt.is_distillation),
+                                         onlyUseClsDistillation='onlyUseClsDistillation' + str(
+                                             opt.only_use_cls_distillation), useHint='useHint' + str(opt.use_hint))
+
+        else:
+            if eval_result['map'] > best_map:
+                best_map = eval_result['map']
+                best_path = trainer.save(results_file_name=results_file, best_map=best_map, epoch=epoch, isDistillation='isDistillation' + str(opt.is_distillation), onlyUseClsDistillation='onlyUseClsDistillation' + str(opt.only_use_cls_distillation), useHint='useHint' + str(opt.use_hint))
 
         # 每几轮加载前面最好权重，并且减少学习率
         if (epoch + 1) % opt.lr_decay_step == 0:
