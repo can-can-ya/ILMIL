@@ -13,8 +13,8 @@ class Config:
     voc_data_dir = '/home/goujiaxiang/Code/ILMIL/ILMIL/VOCdevkit/VOC2007'
     min_size = 600  # image resize
     max_size = 1000  # image resize
-    num_workers = 8
-    test_num_workers = 8
+    num_workers = 0
+    test_num_workers = 0
     predict_socre = 0.05
     # sigma for l1_smooth_loss
     rpn_sigma = 3.
@@ -39,7 +39,7 @@ class Config:
 
     # training
     start_epoch = 0
-    epoch = 30
+    epoch = 20
 
     use_adam = False  # Use Adam optimizer
     use_chainer = False  # try match everything as chainer
@@ -49,8 +49,8 @@ class Config:
     threshold = 0.5
     test_num = 5000
     # model
-    is_distillation = False
-    only_use_cls_distillation = is_distillation and True
+    is_distillation = True
+    only_use_cls_distillation = is_distillation and False
     use_hint = is_distillation and True
     testtxt = 'test'
     datatxt = 'trainval'

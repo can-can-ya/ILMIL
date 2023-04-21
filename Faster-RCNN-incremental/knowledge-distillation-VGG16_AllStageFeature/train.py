@@ -196,8 +196,9 @@ def train(**kwargs):
                 ori_img_ = inverse_normalize(at.tonumpy(img[0]))
                 gt_img = visdom_bbox(ori_img_,
                                      at.tonumpy(bbox_[0]),
-                                     at.tonumpy(label_[0]))
-                trainer.vis.img('gt_img' + '_' + id_[0], gt_img)
+                                     at.tonumpy(label_[0]),
+                                     id = id_[0])
+                trainer.vis.img('gt_img', gt_img)
 
                 # plot predicti bboxes
                 _bboxes, _labels, _scores, _, _ = trainer.faster_rcnn.predict([ori_img_], visualize=True)

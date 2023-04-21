@@ -25,7 +25,7 @@ class Config:
     weight_decay = 0.0005
     lr_decay = 0.33
     lr_decay_step = 5 # 降低学习率的间隔
-    lr = 1e-4
+    lr = 1e-3
     best_map = 0
 
     # visualization
@@ -50,11 +50,11 @@ class Config:
     test_num = 5000
     # model
     is_distillation = False
-    only_use_cls_distillation = is_distillation and True
+    only_use_cls_distillation = is_distillation and False
     use_hint = is_distillation and True
     testtxt = 'test'
     datatxt = 'trainval'
-    load_path = "../fasterrcnn.pth"
+    load_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/fasterrcnn.pth"
     # load_path = None
 
     # 训练异常终止后恢复训练
@@ -70,6 +70,7 @@ class Config:
     predict_GT = True # 是否有GT
 
     VOC_BBOX_LABEL_NAMES_all = ( # 训练类别
+        # 注意只有一个类别时，不要忘了加逗号，不然就是一个字符串，而不是元组类型了
         'aeroplane',
         'bicycle',
         'bird',
@@ -84,12 +85,7 @@ class Config:
         'dog',
         'horse',
         'motorbike',
-        'person',
-        'pottedplant',
-        'sheep',
-        'sofa',
-        'train',
-        'tvmonitor'
+        'person'
     )
 
     VOC_BBOX_LABEL_NAMES_test = ( # 验证、测试和预测的类别（模型多预测出的类别不影响，可以看做是没有多余检测能力）
@@ -107,12 +103,7 @@ class Config:
         'dog',
         'horse',
         'motorbike',
-        'person',
-        'pottedplant',
-        'sheep',
-        'sofa',
-        'train',
-        'tvmonitor'
+        'person'
     )
     def _parse(self, kwargs):
         state_dict = self._state_dict()
