@@ -86,30 +86,30 @@ def train(**kwargs):
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
 
     # 提取蒸馏知识所需要的软标签（恢复训练时不能执行这段代码，教师模型和数据集一致时可以注释掉该段代码以提高训练速度）
-    # if opt.is_distillation == True and not opt.resume:
-    #     opt.predict_socre = 0.3
-    #     for ii, (imgs, sizes, gt_bboxes_, gt_labels_, scale, id_) in tqdm(enumerate(dataloader)):
-    #         if len(gt_bboxes_) == 0:
-    #             continue
-    #         sizes = [sizes[0][0].item(), sizes[1][0].item()]
-    #         pred_bboxes_, pred_labels_, pred_scores_, features_ = trainer.faster_rcnn.predict(imgs, [sizes])
-    #
-    #         img_file = os.path.join(opt.voc_data_dir, 'JPEGImages', id_[0] + '.jpg')
-    #         ori_img = read_image(img_file, color=True)
-    #         img, pred_bboxes_, pred_labels_, scale_ = tsf((ori_img, pred_bboxes_[0], pred_labels_[0]))
-    #
-    #         #去除软标签和真值标签重叠过多的部分，去除错误的软标签
-    #         pred_bboxes_, pred_labels_, pred_scores_ = py_cpu_nms(
-    #             gt_bboxes_[0], gt_labels_[0], pred_bboxes_, pred_labels_, pred_scores_[0])
-    #
-    #         #存储软标签，这样存储不会使得GPU占用过多
-    #         np.save('s_label/label/' + str(id_[0]) + '.npy', pred_labels_.cpu())
-    #         np.save('s_label/bbox/' + str(id_[0]) + '.npy', pred_bboxes_.cpu())
-    #         np.save('s_label/feature/' + str(id_[0]) + '.npy', features_.cpu())
-    #         np.save('s_label/score/' + str(id_[0]) + '.npy', pred_scores_.cpu())
-    #
-    #     opt.predict_socre = 0.05
-    # t.cuda.empty_cache()
+    if opt.is_distillation == True and not opt.resume:
+        opt.predict_socre = 0.3
+        for ii, (imgs, sizes, gt_bboxes_, gt_labels_, scale, id_) in tqdm(enumerate(dataloader)):
+            if len(gt_bboxes_) == 0:
+                continue
+            sizes = [sizes[0][0].item(), sizes[1][0].item()]
+            pred_bboxes_, pred_labels_, pred_scores_, features_ = trainer.faster_rcnn.predict(imgs, [sizes])
+
+            img_file = os.path.join(opt.voc_data_dir, 'JPEGImages', id_[0] + '.jpg')
+            ori_img = read_image(img_file, color=True)
+            img, pred_bboxes_, pred_labels_, scale_ = tsf((ori_img, pred_bboxes_[0], pred_labels_[0]))
+
+            #去除软标签和真值标签重叠过多的部分，去除错误的软标签
+            pred_bboxes_, pred_labels_, pred_scores_ = py_cpu_nms(
+                gt_bboxes_[0], gt_labels_[0], pred_bboxes_, pred_labels_, pred_scores_[0])
+
+            #存储软标签，这样存储不会使得GPU占用过多
+            np.save('s_label/label/' + str(id_[0]) + '.npy', pred_labels_.cpu())
+            np.save('s_label/bbox/' + str(id_[0]) + '.npy', pred_bboxes_.cpu())
+            np.save('s_label/feature/' + str(id_[0]) + '.npy', features_.cpu())
+            np.save('s_label/score/' + str(id_[0]) + '.npy', pred_scores_.cpu())
+
+        opt.predict_socre = 0.05
+    t.cuda.empty_cache()
 
     # visdom 显示所有类别标签名
     # trainer.vis.text(dataset.db.label_names, win='labels')

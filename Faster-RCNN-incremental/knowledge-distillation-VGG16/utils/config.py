@@ -49,12 +49,12 @@ class Config:
     threshold = 0.5
     test_num = 5000
     # model
-    is_distillation = False
+    is_distillation = True
     only_use_cls_distillation = is_distillation and False
     use_hint = is_distillation and True
     testtxt = 'test'
     datatxt = 'trainval'
-    load_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/fasterrcnn.pth"
+    load_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/knowledge-distillation-VGG16/checkpoints/1-18/fasterrcnn_20230424-180333_15_0.5061482536123302_isDistillationTrue_onlyUseClsDistillationFalse_useHintTrue.pth"
     # load_path = None
 
     # 训练异常终止后恢复训练
@@ -71,21 +71,7 @@ class Config:
 
     VOC_BBOX_LABEL_NAMES_all = ( # 训练类别
         # 注意只有一个类别时，不要忘了加逗号，不然就是一个字符串，而不是元组类型了
-        'aeroplane',
-        'bicycle',
-        'bird',
-        'boat',
-        'bottle',
-        'bus',
-        'car',
-        'cat',
-        'chair',
-        'cow',
-        'diningtable',
-        'dog',
-        'horse',
-        'motorbike',
-        'person'
+        'train',
     )
 
     VOC_BBOX_LABEL_NAMES_test = ( # 验证、测试和预测的类别（模型多预测出的类别不影响，可以看做是没有多余检测能力）
@@ -103,7 +89,11 @@ class Config:
         'dog',
         'horse',
         'motorbike',
-        'person'
+        'person',
+        'pottedplant',
+        'sheep',
+        'sofa',
+        'train'
     )
     def _parse(self, kwargs):
         state_dict = self._state_dict()

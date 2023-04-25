@@ -54,7 +54,7 @@ class Config:
     use_hint = is_distillation and True
     testtxt = 'test'
     datatxt = 'trainval'
-    load_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/knowledge-distillation-VGG16-1/checkpoints/10-10/fasterrcnn_20230419-144601_10_0.7290525060477888_isDistillationFalse_onlyUseClsDistillationFalse_useHintFalse.pth"
+    load_path = "/home/goujiaxiang/Code/ILMIL/ILMIL/Faster-RCNN-incremental/knowledge-distillation-VGG16-1/checkpoints/5-15/fasterrcnn_20230423-014422_5_0.7635760299186386_isDistillationTrue_onlyUseClsDistillationFalse_useHintTrue.pth"
     # load_path = None
 
     # 训练异常终止后恢复训练
@@ -66,11 +66,6 @@ class Config:
     test_path = ""
 
     VOC_BBOX_LABEL_NAMES_all = (
-        'diningtable',
-        'dog',
-        'horse',
-        'motorbike',
-        'person',
         'pottedplant',
         'sheep',
         'sofa',
