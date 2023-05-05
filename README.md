@@ -26,3 +26,5 @@ conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit
 1. 在服务器终端输入python -m visdom.server启动
 2. 本机终端实现端口映射：ssh goujiaxiang@machines2023.top -p 6662 -L 8888:127.0.0.1:8097
 3. 本机浏览器访问：http://localhost:8888/
+
+感觉这个代码不像是知识蒸馏，而是用旧网络检测到的旧类别目标当做标签来进行训练
